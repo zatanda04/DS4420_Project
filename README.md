@@ -1,4 +1,4 @@
-# _**Remarriage After Divorce**_
+# **Remarriage After Divorce**
 
 ## **Team Members**
 Zainab Atanda, Khadiatou Ly
@@ -31,10 +31,3 @@ What socioeconomic factors best predict whether a divorced individual will remar
   - Implemented in Python
 - Phase 2 — Model 2 (Bayesian): Bayesian Logistic Regression
     - Implemented in R
-
-## **Repository Structure**
-- data/
-- notebooks/
-- src/
-- references/
-- results/
