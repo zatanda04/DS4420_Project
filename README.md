@@ -3,11 +3,14 @@
 ## Team Members
 Zainab Atanda, Khadiatou Ly
 
-## Project Idea
-This project investigates x using non-Bayesian and Bayesian methods.
+## Project Overview
+This project applies machine learning methods to predict whether a previously divorced individual will remarry, using demographic and socioeconomic features from the National Survey of Family Growth (NSFG) 2022-2023. Our technical approach will utilize bayesian and non-Baysian methods––specifically,an MLP Neural network and a Bayesian Logistic Regression. 
+
+The target variable is whether an individual who has experienced a divorce subsequently remarries.
 
 ## Dataset
-Dataset: [paste link]
+Dataset: https://www.cdc.gov/nchs/nsfg/nsfg-2022-2023-puf.html
+ We will be synthesizing Female and Male repondents to provide a full picture to our analysis to answer the research question. 
 
 ## Research Question
 x
