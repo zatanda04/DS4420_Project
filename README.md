@@ -9,13 +9,13 @@ This project applies machine learning methods to predict whether a previously di
 - **Target Variable:** whether an individual who has experienced a divorce is likely to remarry.
   
 - **Key Features:**
- - Age at first divorce
- - Total household income
- - Educational attainment
- - Number of biological children
- - Race/ethnicity
- - Gender
- - Cohabitation history
+   - Age at first divorce
+   - Total household income
+   - Educational attainment
+   - Number of biological children
+   - Race/ethnicity
+   - Gender
+   - Cohabitation history
   
 ## **Dataset**
 Dataset: https://www.cdc.gov/nchs/nsfg/nsfg-2022-2023-puf.html
@@ -29,7 +29,7 @@ What socioeconomic factors best predict whether a divorced individual will remar
 - Phase 1 — Model 1 (Non-Bayesian): Multilayer Perceptron (MLP) Neural Network
   - Implemented in Python
 - Phase 2 — Model 2 (Bayesian): Bayesian Logistic Regression
- - Implemented in R
+    - Implemented in R
 
 ## **Repository Structure**
 - data/
