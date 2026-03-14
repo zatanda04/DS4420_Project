@@ -4,7 +4,7 @@
 Zainab Atanda, Khadiatou Ly
 
 ## **Project Overview**
-This project applies machine learning methods to investigate the likelihood a divorced individual will remarry, using socioeconomic features from the National Survey of Family Growth (NSFG) 2022-2023. Our technical approach will utilize Bayesian and non-Baysian methods––specifically, an MLP Neural network and a Bayesian Logistic Regression. 
+This project applies machine learning methods to investigate the likelihood a divorced individual will remarry, using socioeconomic features from the National Survey of Family Growth (NSFG) 2022-2023. Our technical approach will utilize Bayesian and non-Baysian methods–specifically, an MLP Neural network and a Bayesian Logistic Regression. 
 
 **Target Variable:** 
 - Whether an individual who has experienced a divorce is likely to remarry.
