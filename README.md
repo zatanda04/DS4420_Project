@@ -31,3 +31,6 @@ What socioeconomic factors best predict whether a divorced individual will remar
   - Implemented in Python
 - Phase 2 — Model 2 (Bayesian): Bayesian Logistic Regression
     - Implemented in R
+
+## Literature Review
+https://docs.google.com/document/d/1lgVpt3ULKHjxiTcFxGtej82ay-gwhZfotCAcrjtD2aI/edit?usp=drivesdk
