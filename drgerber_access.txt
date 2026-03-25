@@ -1,2 +1,0 @@
-# Confirming push access
-  # delete as soon as confirmed
