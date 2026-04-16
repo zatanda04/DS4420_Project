@@ -1,0 +1,217 @@
+---
+title: "Bayesian Model: Remarriage After Divorce DS4420 Project"
+author: Zainab Atanda & Khadiatou Ly
+output: pdf_document
+---
+
+```{r}
+# Bayesian Logistic Regression
+
+library(dplyr)
+library(brms)
+library(ggplot2)
+library(scales)
+
+# Loading files
+fem <- read.csv("NSFG_2022_2023_FemRespPUFData.csv", stringsAsFactors = FALSE)
+male <- read.csv("NSFG_2022_2023_MaleRespPUFData.csv", stringsAsFactors = FALSE)
+
+# Extracting female and male divorcees
+fem_div <- fem[!is.na(fem$MARENDHX_1) & fem$MARENDHX_1 == 2, ]
+male_div <- male[!is.na(male$MARREND_W1) & male$MARREND_W1 == 2, ]
+
+# FMARNO counts marriages, if someone is divorced and FMARNO > 1, they have remarried
+male_div$remarried <- as.integer(male_div$FMARNO > 1)
+fem_div$remarried  <- as.integer(fem_div$FMARNO > 1)
+
+# pulling cols to keep
+factors <- c("AGE_R", "POVERTY", "TOTINCR", "HIEDUC",
+             "LABORFOR", "RSCRRACE", "HISP", "remarried")
+
+# changing col name to num_children
+fem_div$num_children  <- fem_div$NUMCHILD
+male_div$num_children <- male_div$NUMBIOKID
+
+fem_div$sex  <- 1
+male_div$sex <- 0
+
+# combining to one common column list, then into a single dataset
+keep <- c(factors, "num_children", "sex")
+
+remarriage_data <- bind_rows(
+  fem_div[, keep],
+  male_div[, keep]
+)
+
+# standardizing col names
+remarriage_data <- remarriage_data %>%
+  rename(
+    age = AGE_R,
+    poverty_ratio = POVERTY,
+    total_income_cat = TOTINCR,
+    education_level = HIEDUC,
+    labor_force_status = LABORFOR,
+    race = RSCRRACE,
+    hispanic = HISP
+  )
+
+# cleaning
+# replacing NSFG special codes with NA
+remarriage_data$hispanic[remarriage_data$hispanic %in% c(8, 9)] <- NA
+remarriage_data$num_children[remarriage_data$num_children %in% c(98, 99)] <- NA
+remarriage_data$age[remarriage_data$age >= 95] <- NA
+remarriage_data$poverty_ratio[remarriage_data$poverty_ratio > 700] <- NA
+
+# recoding hispanic: 1 = Hispanic, 0 = not Hispanic
+remarriage_data$hispanic <- ifelse(remarriage_data$hispanic == 1, 1,
+                            ifelse(remarriage_data$hispanic == 5, 0, NA))
+
+# recoding labor force status: employed (1-3) vs not employed (4-7)
+remarriage_data$employed <- ifelse(remarriage_data$labor_force_status %in% c(1, 2, 3), 1,
+                            ifelse(remarriage_data$labor_force_status %in% c(4, 5, 6, 7), 0, NA))
+
+# race dummies (White is the reference category)
+remarriage_data$race_black    <- ifelse(remarriage_data$race == 2, 1, 0)
+remarriage_data$race_aian     <- ifelse(remarriage_data$race == 3, 1, 0)
+remarriage_data$race_asian_pi <- ifelse(remarriage_data$race == 4, 1, 0)
+
+# make missing race values NA in the dummies too
+remarriage_data$race_black[is.na(remarriage_data$race)] <- NA
+remarriage_data$race_aian[is.na(remarriage_data$race)] <- NA
+remarriage_data$race_asian_pi[is.na(remarriage_data$race)] <- NA
+
+# keep only final modeling columns
+remarriage_data <- remarriage_data[, c(
+  "remarried",
+  "age",
+  "poverty_ratio",
+  "total_income_cat",
+  "education_level",
+  "num_children",
+  "hispanic",
+  "sex",
+  "employed",
+  "race_black",
+  "race_aian",
+  "race_asian_pi"
+)]
+
+# Handling missing values
+# median imputation so rows are preserved for modeling/plots
+for (col in colnames(remarriage_data)) {
+  if (any(is.na(remarriage_data[[col]]))) {
+    remarriage_data[[col]][is.na(remarriage_data[[col]])] <- median(remarriage_data[[col]], na.rm = TRUE)
+  }
+}
+
+# scale predictors for Bayesian logistic regression
+features <- c(
+  "age", "poverty_ratio", "total_income_cat", "education_level",
+  "num_children", "hispanic", "sex", "employed",
+  "race_black", "race_aian", "race_asian_pi"
+)
+
+remarriage_scaled <- remarriage_data
+remarriage_scaled[, features] <- scale(remarriage_data[, features])
+
+# outcome should be factor for brms logistic regression
+remarriage_scaled$remarried <- as.factor(remarriage_scaled$remarried)
+
+# priors
+manual_prior <- c(
+  prior(student_t(4, 0, 10), class = "Intercept"),
+  prior(normal(0, 2), class = "b", coef = "age"),
+  prior(normal(0, 2), class = "b", coef = "poverty_ratio"),
+  prior(normal(0, 2), class = "b", coef = "total_income_cat"),
+  prior(normal(0, 2), class = "b", coef = "education_level"),
+  prior(normal(0, 2), class = "b", coef = "num_children"),
+  prior(normal(0, 2), class = "b", coef = "hispanic"),
+  prior(normal(0, 2), class = "b", coef = "sex"),
+  prior(normal(0, 2), class = "b", coef = "employed"),
+  prior(normal(0, 2), class = "b", coef = "race_black"),
+  prior(normal(0, 2), class = "b", coef = "race_aian"),
+  prior(normal(0, 2), class = "b", coef = "race_asian_pi")
+)
+
+# fit Bayesian logistic regression
+remarriage_brm_logit <- brm(
+  remarried ~ age + poverty_ratio + total_income_cat + education_level +
+    num_children + hispanic + sex + employed +
+    race_black + race_aian + race_asian_pi,
+  family = bernoulli("logit"),
+  data = remarriage_scaled,
+  chains = 4,
+  iter = 1000,
+  warmup = 180,
+  prior = manual_prior
+)
+
+# summary 
+model_summary <- summary(remarriage_brm_logit)
+
+# coefficient plot
+# remove female, black, aian, asian/pi, and hispanic from the graph
+coef_df <- as.data.frame(model_summary$fixed)
+coef_df$Variable <- rownames(coef_df)
+
+# rename CI columns
+colnames(coef_df)[colnames(coef_df) == "l-95% CI"] <- "lower_ci"
+colnames(coef_df)[colnames(coef_df) == "u-95% CI"] <- "upper_ci"
+
+coef_df <- coef_df %>%
+  filter(
+    Variable != "Intercept",
+    !Variable %in% c("sex", "race_black", "race_aian", "race_asian_pi", "hispanic")
+  ) %>%
+  mutate(
+    Variable = recode(
+      Variable,
+      age = "Age",
+      poverty_ratio = "Poverty Ratio",
+      total_income_cat = "Income Category",
+      education_level = "Education Level",
+      num_children = "Number of Children",
+      employed = "Employed"
+    ),
+    Variable = factor(Variable, levels = rev(Variable))
+  )
+
+p_coef <- ggplot(coef_df, aes(y = Variable, x = Estimate)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_errorbar(
+    aes(xmin = lower_ci, xmax = upper_ci),
+    width = 0.2,
+    color = "#2C7FB8",
+    orientation = "y"
+  ) +
+  geom_point(size = 3, color = "#D95F0E") +
+  
+  labs(
+  title = "Remarriage After Divorce: Bayesian Model",
+  x = "Effect on Likelihood of Remarriage",
+  y = NULL,
+  caption = "> 0 = higher likelihood of remarriage   |   < 0 = lower likelihood of remarriage"
+) +
+theme_minimal(base_size = 14) +
+theme(
+  plot.caption = element_text(size = 10, hjust = 0.5),
+  axis.title.x = element_text(margin = margin(t = 12))
+)
+
+print(p_coef)
+```
+
+```{r}
+cat("\nFemale divorced:", nrow(fem_div), " | remarried:", sum(fem_div$remarried, na.rm = TRUE), "\n")
+cat("Male divorced:", nrow(male_div), " | remarried:", sum(male_div$remarried, na.rm = TRUE), "\n")
+
+print(model_summary)
+
+fixed_df <- as.data.frame(model_summary$fixed)
+fixed_df$Variable <- rownames(fixed_df)
+
+colnames(fixed_df)[colnames(fixed_df) == "l-95% CI"] <- "lower_ci"
+colnames(fixed_df)[colnames(fixed_df) == "u-95% CI"] <- "upper_ci"
+
+print(fixed_df[, c("Variable", "Estimate", "lower_ci", "upper_ci", "Rhat")])
+```
