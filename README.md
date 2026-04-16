@@ -16,7 +16,6 @@ This project applies machine learning methods to investigate the likelihood a di
 - Number of biological children
 - Race/ethnicity
 - Gender
-- Cohabitation history
   
 ## **Dataset**
 Dataset: https://www.cdc.gov/nchs/nsfg/nsfg-2022-2023-puf.html
