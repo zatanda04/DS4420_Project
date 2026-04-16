@@ -10,7 +10,7 @@ This project applies machine learning methods to investigate the likelihood a di
 - Whether an individual who has experienced a divorce is likely to remarry.
   
 **Key Features:**
-- Age at first divorce
+- Age 
 - Total household income
 - Educational attainment
 - Number of biological children
