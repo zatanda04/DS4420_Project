@@ -201,6 +201,39 @@ theme(
 print(p_coef)
 ```
 
+
+```{r}
+# Bayesian classification metrics
+bayes_probs <- fitted(remarriage_brm_logit, summary = TRUE)[, "Estimate"]
+bayes_pred <- ifelse(bayes_probs >= 0.5, 1, 0)
+y_true <- as.numeric(as.character(remarriage_scaled$remarried))
+
+TP <- sum(bayes_pred == 1 & y_true == 1)
+TN <- sum(bayes_pred == 0 & y_true == 0)
+FP <- sum(bayes_pred == 1 & y_true == 0)
+FN <- sum(bayes_pred == 0 & y_true == 1)
+
+accuracy <- (TP + TN) / length(y_true)
+precision <- ifelse((TP + FP) > 0, TP / (TP + FP), 0)
+recall <- ifelse((TP + FN) > 0, TP / (TP + FN), 0)
+f1 <- ifelse((precision + recall) > 0, 2 * precision * recall / (precision + recall), 0)
+
+library(pROC)
+auc_value <- auc(y_true, bayes_probs)
+
+cat("\nBayesian Model Classification Metrics\n")
+cat("Accuracy :", round(accuracy, 3), "\n")
+cat("Precision:", round(precision, 3), "\n")
+cat("Recall   :", round(recall, 3), "\n")
+cat("F1 Score :", round(f1, 3), "\n")
+cat("ROC-AUC  :", round(as.numeric(auc_value), 3), "\n")
+
+cat("\nConfusion Matrix:\n")
+cat("             Pred 0   Pred 1\n")
+cat("Actual 0:   ", sprintf("%6d", TN), sprintf("%8d", FP), "\n")
+cat("Actual 1:   ", sprintf("%6d", FN), sprintf("%8d", TP), "\n")
+```
+
 ```{r}
 cat("\nFemale divorced:", nrow(fem_div), " | remarried:", sum(fem_div$remarried, na.rm = TRUE), "\n")
 cat("Male divorced:", nrow(male_div), " | remarried:", sum(male_div$remarried, na.rm = TRUE), "\n")
